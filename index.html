@@ -1,274 +1,299 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-<!-- external -->
-<script type="text/javascript">
-    window.cookieconsent_options = {"message":"Unsurprisingly, this website uses cookies for ads and traffic analysis.","dismiss":"Got it!","learnMore":"Learn more","link":"//orteil.dashnet.org/cookieconsentpolicy.html","target":"_blank","theme":"//orteil.dashnet.org/cookieconsent.css","domain":"dashnet.org"};
-</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Password Protected Page</title>
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #dialogText {
+            color: white;
+            background-color: #333333;
+        }
+        
+        #dialogWrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: table;
+            background-color: #EEEEEE;
+        }
+        
+        #dialogWrapCell {
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        #mainDialog {
+            max-width: 400px;
+            margin: 5px;
+            border: solid #AAAAAA 1px;
+            border-radius: 10px;
+            box-shadow: 3px 3px 5px 3px #AAAAAA;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #FFFFFF;
+            overflow: hidden;
+            text-align: left;
+        }
+        #mainDialog > * {
+            padding: 10px 30px;
+        }
+        #passArea {
+            padding: 20px 30px;
+            background-color: white;
+        }
+        #passArea > * {
+            margin: 5px auto;
+        }
+        #pass {
+            width: 100%;
+            height: 40px;
+            font-size: 30px;
+        }
+        
+        #messageWrapper {
+            float: left;
+            vertical-align: middle;
+            line-height: 30px;
+        }
+        
+        .notifyText {
+            display: none;
+        }
+        
+        #invalidPass {
+            color: red;
+        }
+        
+        #success {
+            color: green;
+        }
+        
+        #submitPass {
+            font-size: 20px;
+            border-radius: 5px;
+            background-color: #E7E7E7;
+            border: solid gray 1px;
+            float: right;
+            cursor: pointer;
+        }
+        #contentFrame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #attribution {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+        #attribution, #attribution a {
+            color: #999;
+        }
+        .error {
+            display: none;
+            color: red;
+        }
+    </style>
+  </head>
+  <body>
+    <iframe id="contentFrame" frameBorder="0" allowfullscreen></iframe>
+    <div id="dialogWrap">
+        <div id="dialogWrapCell">
+            <div id="mainDialog">
+                <div id="dialogText">This page is password protected.</div>
+                <div id="passArea">
+                    <p id="passwordPrompt">Password</p>
+                    <input id="pass" type="password" name="pass" autofocus>
+                    <div>
+                        <span id="messageWrapper">
+                            <span id="invalidPass" class="error">Sorry, please try again.</span>
+                            <span id="trycatcherror" class="error">Sorry, something went wrong.</span>
+                            <span id="success" class="notifyText">Success!</span>
+                            &nbsp;
+                        </span>
+                        <button id="submitPass" type="button">Submit</button>
+                        <div style="clear: both;"></div>
+                    </div>
+                </div>
+                <div id="securecontext" class="error">
+                    <p>
+                        Sorry, but password protection only works over a secure connection. Please load this page via HTTPS.
+                    </p>
+                </div>
+                <div id="nocrypto" class="error">
+                    <p>
+                        Your web browser appears to be outdated. Please visit this page using a modern browser.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="attribution">
+        Protected by <a href="https://www.maxlaumeister.com/pagecrypt/">PageCrypt</a>
+    </div>
+    <script>
+    (function() {
 
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/1.0.9/cookieconsent.min.js"></script>
+        var pl = "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";
+        
+        var submitPass = document.getElementById('submitPass');
+        var passEl = document.getElementById('pass');
+        var invalidPassEl = document.getElementById('invalidPass');
+        var trycatcherror = document.getElementById('trycatcherror');
+        var successEl = document.getElementById('success');
+        var contentFrame = document.getElementById('contentFrame');
+        
+        // Sanity checks
 
-<!--<link href="https://fonts.googleapis.com/css?family=Kavoon&subset=latin,latin-ext" rel="stylesheet" type="text/css">-->
-<link href='https://fonts.googleapis.com/css?family=Merriweather:900&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+        if (pl === "") {
+            submitPass.disabled = true;
+            passEl.disabled = true;
+            alert("This page is meant to be used with the encryption tool. It doesn't work standalone.");
+            return;
+        }
 
-<!-- Facebook Pixel Code -->
-	<script>
-	!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-	n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-	n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-	t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-	document,'script','https://connect.facebook.net/en_US/fbevents.js');
-	fbq('init', '357399801355203');
-	fbq('track', 'PageView');
-	</script>
-	<noscript><img height="1" width="1" style="display:none"
-	src="https://www.facebook.com/tr?id=357399801355203&ev=PageView&noscript=1"></noscript>
-<!-- end code -->
-<!-- /external -->
+        if (!isSecureContext) {
+            document.querySelector("#passArea").style.display = "none";
+            document.querySelector("#securecontext").style.display = "block";
+            return;
+        }
 
-<title>Cookie Clicker</title>
-<!--
-Code and graphics copyright Orteil, 2013-2023
-Feel free to alter this code to your liking, but please do not re-host it, do not profit from it and do not present it as your own.
--->
+        if (!crypto.subtle) {
+            document.querySelector("#passArea").style.display = "none";
+            document.querySelector("#nocrypto").style.display = "block";
+            return;
+        }
+        
+        function str2ab(str) {
+            var ustr = atob(str);
+            var buf = new ArrayBuffer(ustr.length);
+            var bufView = new Uint8Array(buf);
+            for (var i=0, strLen=ustr.length; i < strLen; i++) {
+                bufView[i] = ustr.charCodeAt(i);
+            }
+            return bufView;
+        }
 
-<meta name="viewport" content="width=900, initial-scale=1">
-<link rel="shortcut icon" href="img/favicon.ico" />
-<script src="base64.js"></script>
+        async function deriveKey(salt, password) {
+            const encoder = new TextEncoder()
+            const baseKey = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveKey'],
+            )
+            return await crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                true,
+                ['decrypt'],
+            )
+        }
+        
+        async function doSubmit(evt) {
+            submitPass.disabled = true;
+            passEl.disabled = true;
 
-<script>
-var VERSION=2.052;
-var BETA=0;
-var App=typeof App==='undefined'?0:App;
-</script>
+            let iv, ciphertext, key;
+            
+            try {
+                var unencodedPl = str2ab(pl);
 
-<link href="style.css?v=9" rel="stylesheet" type="text/css">
-<script  src="main.js?v=10"></script>
+                const salt = unencodedPl.slice(0, 32)
+                iv = unencodedPl.slice(32, 32 + 16)
+                ciphertext = unencodedPl.slice(32 + 16)
 
-<!-- ad -->
-<script src="showads.js"></script><!-- this just detects adblockers so we can adjust the layout and play nice -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({
-          google_ad_client: "ca-pub-8491708950677704",
-          enable_page_level_ads: true
-     });
-</script>
-<!-- /ad -->
+                key = await deriveKey(salt, passEl.value);
+            } catch (e) {
+                trycatcherror.style.display = "inline";
+                console.error(e);
+                return;
+            }
 
-<!--[if IE]>
-<style type="text/css">
-	#ifIE9{display:block;}
-</style>
-<![endif]-->
+            try {
+                const decryptedArray = new Uint8Array(
+                    await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext)
+                );
 
-<!--[if lt IE9]><script src="excanvas.compiled.js"></script><![endif]-->
-</head>
-<body>
+                let decrypted = new TextDecoder().decode(decryptedArray);
 
-<div id="wrapper">
+                if (decrypted === "") throw "No data returned";
 
-	<div id="topBar">
-		<div><b style="font-weight:bold;">Cookie Clicker</b>&trade; &copy; <a href="//orteil.dashnet.org" target="_blank" id="topbarOrteil">Orteil</a>, 2023 - <a href="//dashnet.org" target="_blank" id="topbarDashnet">DashNet</a></div>
-		<div><a href="https://twitter.com/orteil42" target="_blank" id="topbarTwitter">twitter</a></div>
-		<div><a href="https://orteil42.tumblr.com" target="_blank" id="topbarTumblr">tumblr</a></div>
-		<div style="position:relative;"><div style="width:22px;height:32px;background:url(img/discord.png);position:absolute;left:0px;top:0px;pointer-events:none;"></div><a href="https://discordapp.com/invite/cookie" target="_blank" style="padding-left:16px;" id="topbarDiscord">Discord</a></div>
-		<div style="position:relative;"><div style="width:25px;height:32px;background:url(img/weeHoodie.png);position:absolute;left:-2px;top:0px;pointer-events:none;"></div><a class="blueLink" href="http://www.redbubble.com/people/dashnet" target="_blank" style="padding-left:12px;" id="topbarMerch">Merch!</a></div>
-		<div style="position:relative;"><div style="width:22px;height:32px;background:url(img/patreon.png);position:absolute;left:0px;top:0px;pointer-events:none;"></div><a class="orangeLink" href="https://www.patreon.com/dashnet" target="_blank" style="padding-left:16px;" id="topbarPatreon">Patreon</a></div>
-		<div style="position:relative;display:none;font-weight:bold;" id="heralds"><div style="position:absolute;top:-4px;width:31px;height:39px;background:url(img/heraldFlag.png);left:50%;margin-left:-15px;pointer-events:none;"></div><div id="heraldsAmount" style="position:relative;z-index:10;text-shadow:0px 1px 0px #000,0px 0px 6px #ff00e4;color:#fff;">-</div></div>
-		<div><a class="lightblueLink" style="font-weight:bold;" href="https://play.google.com/store/apps/details?id=org.dashnet.cookieclicker" target="_blank" id="topbarMobileCC">Cookie Clicker for Android</a></div>
-		<div><a class="lightblueLink" style="font-weight:bold;" href="https://store.steampowered.com/app/1454400/Cookie_Clicker/" target="_blank" id="topbarSteamCC">Cookie Clicker on Steam</a></div>
-		<div><a href="//orteil.dashnet.org/randomgen/" target="_blank" id="topbarRandomgen">RandomGen</a></div>
-		<div><a href="//orteil.dashnet.org/igm/" target="_blank" id="topbarIGM">Idle Game Maker</a></div>
-		<div style="float:right;position:relative;"><div id="tinyglobe" style="position:absolute;top:-4px;width:22px;height:22px;background:url(img/tinyglobeSheet.gif);right:4px;top:4px;pointer-events:none;"></div><a id="changeLanguage" style="font-variant:small-caps;padding-right:20px;" onmouseover="INTERVAL_TINYGLOBE=setInterval(function(){var tinyglobe=document.getElementById('tinyglobe');tinyglobe.style.backgroundPosition=(parseInt(tinyglobe.style.backgroundPosition)-22)+'px';},30);" onmouseout="clearInterval(INTERVAL_TINYGLOBE);">Change language</a><script>document.getElementById('tinyglobe').style.backgroundPosition=(-[0,19,27][Math.floor(Math.random()*3)]*22)+'px';</script></div>
-		<div id="links" class="hoverer">
-			Other versions
-			<div class="hoverable">
-				<a href="../" target="_blank" id="linkVersionLive">Live version</a>
-				<a href="beta" target="_blank" id="linkVersionBeta">Try the beta!</a>
-				<a href="//orteil.dashnet.org/cookieclicker/v10466" target="_blank" id="linkVersionOld">v. 1.0466</a>
-				<a href="//orteil.dashnet.org/experiments/cookie/" target="_blank">Classic</a>
-			</div>
-		</div>
-	</div>
-	<div id="game">
-		<div id="versionNumber" class="title"></div>
-		<script>document.getElementById('versionNumber').innerHTML='v. '+VERSION;</script>
-		<div id="offGameMessageWrap">
-			<div id="offGameMessage">
-				<div id="loader">
-					<div class="spinnyBig"></div>
-					<div class="spinnySmall"></div>
-					<div id="loading" class="title">Loading...</div>
-					<div id="failedToLoad" class="title">This is taking longer than expected.<br>
-					<div style="font-size:65%;line-height:120%;"><!-- error -->Slow connection? If not, please make sure your javascript is enabled, then refresh.<br>
-					If problems persist, this might be on our side - wait a few minutes, then hit ctrl+f5!<!-- /error --></div></div>
-					<div id="ifIE9" class="title" style="font-size:100%;line-height:120%;">Your browser may not be recent enough to run Cookie Clicker.<br>You might want to update, or switch to a more modern browser such as Chrome or Firefox.</div>
-				</div>
-			</div>
-		</div>
+                const basestr = '<base href="." target="_top">';
+                const anchorfixstr = `
+                    <script>
+                        Array.from(document.links).forEach((anchor) => {
+                            const href = anchor.getAttribute("href");
+                            if (href.startsWith("#")) {
+                                anchor.addEventListener("click", function(e) {
+                                    e.preventDefault();
+                                    const targetId = this.getAttribute("href").substring(1);
+                                    const targetEl = document.getElementById(targetId);
+                                    targetEl.scrollIntoView();
+                                });
+                            }
+                        });
+                    <\/script>
+                `;
+                
+                // Set default iframe link targets to _top so all links break out of the iframe
+                if (decrypted.includes("<head>")) decrypted = decrypted.replace("<head>", "<head>" + basestr);
+                else if (decrypted.includes("<!DOCTYPE html>")) decrypted = decrypted.replace("<!DOCTYPE html>", "<!DOCTYPE html>" + basestr);
+                else decrypted = basestr + decrypted;
 
-		<canvas id="backgroundCanvas"></canvas>
-		
-		<div id="goldenCookie" class="goldenCookie"></div>
-		<div id="seasonPopup" class="seasonPopup"></div>
-		<div id="shimmers"></div>
-		<div id="alert"></div>
-		<div id="particles"></div>
-		<div id="sparkles" class="sparkles"></div>
-		<div id="notes"></div>
-		<div id="darken"></div>
-		<div id="toggleBox" class="framed prompt"></div>
-		<div id="promptAnchor"><div id="prompt" class="framed"><div id="promptContent"></div><div id="promptClose" class="close" style="display:none;" onclick="PlaySound('snd/tickOff.mp3');Game.ClosePrompt();">x</div></div></div>
-		<div id="ascend">
-			<div id="ascendBG"></div>
-			<div id="ascendZoomable"><div id="ascendContent"><div id="ascendUpgrades" style="position:absolute;"></div></div></div>
-			<div id="ascendOverlay"></div>
-		</div>
-		
-		<div id="debug"><div id="devConsole" class="framed"></div><div id="debugLog"></div></div>
-		
-		<div id="sectionLeft" class="inset">
-			<canvas id="backgroundLeftCanvas" style="z-index:5;"></canvas>
-			<div class="blackFiller"></div>
-			<div class="blackGradient"></div>
-			<div id="sectionLeftInfo"></div>
-			<div id="cookies" class="title"></div>
-			<div id="bakeryNameAnchor"><div id="bakeryName" class="title"></div></div>
-			<div id="specialPopup" class="framed prompt offScreen"></div>
-			<div id="buffs" class="crateBox"></div>
-			<div id="cookieAnchor">
-				<button id="bigCookie"></button>
-				<div id="cookieNumbers"></div>
-			</div>
-			<div id="sectionLeftExtra"></div>
-		</div>
-
-		<div class="separatorLeft" id="leftBeam"></div>
-		<div class="separatorRight" id="rightBeam"></div>
-
-		<div id="sectionMiddle" class="inset">
-			<div id="comments" class="inset title">
-				<div id="prefsButton" class="panelButton"><div class="subButton">Options</div></div>
-				<div id="statsButton" class="panelButton"><div>Stats</div></div>
-				<div id="logButton" class="panelButton"><div>Info</div><div id="checkForUpdate">New update!</div></div>
-				<div id="legacyButton" class="panelButton"><div class="subButton">Legacy</div><div id="ascendMeterContainer" class="smallFramed meterContainer"><div id="ascendMeter" class="meter filling"></div></div><div class="roundedPanel" id="ascendNumber"></div><div id="ascendTooltip" class="framed"></div></div>
-				<div id="commentsText">
-					<div id="commentsText1" class="commentsText"></div>
-					<div id="commentsText2" class="commentsText"></div>
-				</div>
-				<div class="separatorBottom"></div>
-			</div>
-			<div id="centerArea">
-				<div id="buildingsTitle" class="inset title zoneTitle">Buildings</div>
-				<div id="buildingsMaster"></div>
-				<div id="rows"></div>
-				<div id="menu"></div>
-			</div>
-		</div>
-		
-		<div id="sectionRight" class="inset">
-			<!-- ad -->
-			<div class="ifNoAds" style="width:300px;text-align:center;padding:8px 0px;background:rgba(0,0,0,0.95);font-size:10px;opacity:0.5;text-shadow:0px 0px 2px #000,0px 1px 0px #000;text-align:center;">
-				Cookie Clicker is mainly supported by ads.<br>Consider unblocking our site or checking out our <a href="https://www.patreon.com/dashnet" target="_blank">Patreon</a>!
-			</div>
-			<div id="smallSupport" style="width:300px;text-align:center;padding-bottom:40px;background:rgba(0,0,0,0.5);position:relative;z-index:100;">
-				
-				<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-				<!-- Cookie Clicker Header Responsive -->
-				<ins class="adsbygoogle"
-					 style="display:block;margin:auto;width:300px;max-height:300px;overflow:hidden;"
-					 data-ad-client="ca-pub-8491708950677704"
-					 data-ad-slot="7077525342"
-					 data-ad-format="rectangle"
-					 data-full-width-responsive="true"></ins>
-				<script>
-				(adsbygoogle = window.adsbygoogle || []).push({});
-				</script>
-				
-				<script>
-				document.addEventListener('DOMContentLoaded',function(){
-					setTimeout(function(){
-						var adSlot=document.querySelector("ins[data-ad-slot='7077525342']");
-						if(adSlot && adSlot.getAttribute('data-ad-status')=='unfilled')
-						{
-							var backfill=document.createElement('div');backfill.innerHTML='<iframe style="border:none;" src="https://serve.playsaurus.com/300x250.html" width="300" height="250" sandbox="allow-scripts allow-popups"></iframe>';
-							adSlot.parentNode.replaceChild(backfill,adSlot);
-						}
-					},3000);
-				});
-				</script>
-				
-				<div class="supportComment">^ Sponsored link ^</div>
-			</div>
-			<!-- /ad -->
-			<div id="store">
-				<div id="storeTitle" class="inset title zoneTitle">Store</div>
-				<div id="toggleUpgrades" class="storeSection upgradeBox"></div>
-				<div id="techUpgrades" class="storeSection upgradeBox"></div>
-				<div id="vaultUpgrades" class="storeSection upgradeBox"></div>
-				<div id="upgrades" class="storeSection upgradeBox"></div>
-				<div id="products" class="storeSection"></div>
-			</div>
-			<!-- ad -->
-			<div id="detectAds" class="adBanner" style="background:transparent;width:1px;height:1px;"></div>
-			<div id="support" style="margin-top:130px;">
-				<div class="supportComment">v Sponsored links v</div>
-				<div style="position:relative;">
-				
-					<div style="position:relative;z-index:100;min-height:250px;">
-					
-						<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-						<!-- Cookie Clicker Responsive -->
-						<ins class="adsbygoogle"
-							 style="display:block;margin:auto;"
-							 data-ad-client="ca-pub-8491708950677704"
-							 data-ad-slot="9780186019"
-							 data-ad-format="auto"
-							 data-full-width-responsive="true"></ins>
-						<script>
-						(adsbygoogle = window.adsbygoogle || []).push({});
-						</script>
-				
-						<script>
-						document.addEventListener('DOMContentLoaded',function(){
-							setTimeout(function(){
-								var adSlot=document.querySelector("ins[data-ad-slot='9780186019']");
-								if(adSlot && adSlot.getAttribute('data-ad-status')=='unfilled')
-								{
-									var backfill=document.createElement('div');backfill.innerHTML='<iframe style="border:none;" src="https://serve.playsaurus.com/300x600.html" width="300" height="600" sandbox="allow-scripts allow-popups"></iframe>';
-									adSlot.parentNode.replaceChild(backfill,adSlot);
-								}
-							},3000);
-						});
-						</script>
-						
-						<div style="height:32px;"></div>
-						
-						<!-- Playsaurus banner -->
-						<a class="ad" id="plad" target="_blank" title="AdventureQuest Worlds" style="width:300px;height:64px;display:block;position:relative;margin:0px auto;">
-						</a>
-						<script>var plAd=document.getElementById('plad');var plAdList=[['Mr. Mine','playsaurusbanner1.png','https://playsaurusstats.com/redirect.php?url=https%3A%2F%2Fmrmine.com&cmd=pageVisit&gameName=MrMine&utm_source=Dashnet&utm_medium=CC&utm_campaign=CCAd&utm_content=&influencer=&hash=bdf9709304a910abd955a4a9d607f7b2'],['Clicker Heroes','playsaurusbanner2.png','https://playsaurusstats.com/redirect.php?url=https%3A%2F%2Fclickerheroes.com&cmd=pageVisit&gameName=CH1&utm_source=Dashnet&utm_medium=CC&utm_campaign=CCAd&utm_content=&influencer=&hash=a1cb78d7d68c2f6bacd193aef75aa3ce'],['Clicker Heroes','playsaurusbanner3.png','https://playsaurusstats.com/redirect.php?url=https%3A%2F%2Fclickerheroes.com&cmd=pageVisit&gameName=CH1&utm_source=Dashnet&utm_medium=CC&utm_campaign=CCAd&utm_content=&influencer=&hash=a1cb78d7d68c2f6bacd193aef75aa3ce']];var plAdRandom=plAdList[Math.floor(Math.random()*plAdList.length)];plAd.style.background='url(img/'+plAdRandom[1]+') no-repeat';plAd.href=plAdRandom[2];plAd.title=plAdRandom[0];</script>
-						
-						<div style="height:32px;"></div>
-						
-						<!-- AdventureQuest Worlds banner -->
-						<a class="ad" id="aqad" href="http://www.aq.com/landing/cookie/?utm_campaign=AQW_CookieClicker&utm_source=CookieClicker" target="_blank" title="AdventureQuest Worlds" style="background:url(img/AQWorlds_CookieClicker_300x40.png) no-repeat;width:300px;height:64px;display:block;position:relative;margin:0px auto;">
-						</a>
-						
-					</div>
-					
-				</div>
-			</div>
-			<!-- /ad -->
-		</div>
-		
-		<div id="tooltipAnchor"><div id="tooltip" class="framed" onMouseOut="Game.tooltip.hide();"></div></div>
-		<div id="preloadImages" style="display:none;"></div>
-
-	</div>
-
-</div>
-
-</body>
+                // Fix fragment links
+                if (decrypted.includes("</body>")) decrypted = decrypted.replace("</body>", anchorfixstr + '</body>');
+                else if (decrypted.includes("</html>")) decrypted = decrypted.replace("</html>", anchorfixstr + '</html>');
+                else decrypted = decrypted + anchorfixstr;
+                
+                contentFrame.srcdoc = decrypted;
+                
+                successEl.style.display = "inline";
+                setTimeout(function() {
+                    dialogWrap.style.display = "none";
+                }, 1000);
+            } catch (e) {
+                invalidPassEl.style.display = "inline";
+                passEl.value = "";
+                submitPass.disabled = false;
+                passEl.disabled = false;
+                console.error(e);
+                return;
+            }
+        }
+        
+        submitPass.onclick = doSubmit;
+        passEl.onkeypress = function(e){
+            if (!e) e = window.event;
+            var keyCode = e.keyCode || e.which;
+            invalidPassEl.style.display = "none";
+            if (keyCode == '13'){
+              // Enter pressed
+              doSubmit();
+              return false;
+            }
+        }
+    })();
+    </script>
+  </body>
 </html>
